@@ -67,8 +67,8 @@ CreateThread(function()
     while true do
         if isInRR then
             DisableAllControlActions(0)
-            EnableControlAction(0, 166, true)
-            EnableControlAction(0, 167, true)
+            EnableControlAction(0, Keybinds['Shoot'], true)
+            EnableControlAction(0, Keybinds['Forfeit'], true)
         end
         Wait(0)
     end
@@ -87,6 +87,11 @@ end
 RegisterCommand('rroulette', function()
     local ped = PlayerPedId()
     if GetEntityHealth(ped) <= 0 then return end
+    local currentWeapon = GetSelectedPedWeapon(ped)
+    if not RevolverHashes[currentWeapon] then
+        lib.notify({ title = 'Russian Roulette', description = 'You need to be holding a revolver', type = 'error' })
+        return
+    end
     local players = GetActivePlayers()
     local closest, dist = nil, 9999.0
     local myCoords = GetEntityCoords(ped)
@@ -154,11 +159,11 @@ end)
 CreateThread(function()
     while true do
         if isInRR and myTurn then
-            if IsControlJustReleased(0, 166) then
+            if IsControlJustReleased(0, Keybinds['Shoot']) then
                 myTurn = false
                 showTurnUI(false)
                 TriggerServerEvent('TC-RussianRoulette:shoot')
-            elseif IsControlJustReleased(0, 167) then
+            elseif IsControlJustReleased(0, Keybinds['Forfeit']) then
                 showTurnUI(false)
                 detachGun()
                 isInRR = false
