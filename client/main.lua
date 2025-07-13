@@ -92,27 +92,8 @@ RegisterCommand('rroulette', function()
         lib.notify({ title = 'Russian Roulette', description = 'You need to be holding a revolver', type = 'error' })
         return
     end
-    local players = GetActivePlayers()
-    local closest, dist = nil, 9999.0
-    local myCoords = GetEntityCoords(ped)
 
-    for _, pid in pairs(players) do
-        if pid ~= PlayerId() then
-            local tgtPed = GetPlayerPed(pid)
-            local d = #(myCoords - GetEntityCoords(tgtPed))
-            if d < dist and d < 3.0 then
-                dist = d
-                closest = GetPlayerServerId(pid)
-            end
-        end
-    end
-
-    if not closest then
-        lib.notify({ title = 'Russian Roulette', description = 'No nearby player found', type = 'error' })
-    else
-        TriggerServerEvent('TC-RussianRoulette:sendRequest', closest)
-        lib.notify({ title = 'Russian Roulette', description = 'Invite sent', type = 'info' })
-    end
+    TriggerServerEvent("TC-RussianRoulette:sendRequestToClosest")
 end, false)
 
 

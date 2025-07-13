@@ -1,15 +1,37 @@
 local games = {}
+local pendingRequests = {}
 
 
-RegisterNetEvent('TC-RussianRoulette:sendRequest', function(targetId)
+RegisterNetEvent('TC-RussianRoulette:sendRequestToClosest', function()
     local src = source
-    TriggerClientEvent('TC-RussianRoulette:receiveRequest', targetId, src)
+    local myCoords = GetEntityCoords(GetPlayerPed(src))
+    local closestPlayer = lib.getClosestPlayer(myCoords, 3.0, false)
+    if not closestPlayer then
+        lib.notify(src, { title = 'Russian Roulette', description = 'No nearby player found', type = 'error' })
+        return
+    end
+    if pendingRequests[src] then
+        lib.notify(src,
+            { title = 'Russian Roulette', description = 'You already have a pending request', type = 'error' })
+        return
+    end
+
+    pendingRequests[src] = true
+    SetTimeout(15000, function()
+        pendingRequests[src] = nil -- In case there is no response
+    end)
+
+    lib.notify(src, { title = 'Russian Roulette', description = 'Invite sent', type = 'info' })
+    TriggerClientEvent('TC-RussianRoulette:receiveRequest', closestPlayer, src)
 end)
 
 
 RegisterNetEvent('TC-RussianRoulette:declined', function(challengerId)
     local src = source
-    TriggerClientEvent('TC-RussianRoulette:declineNotice', challengerId, src)
+    if pendingRequests[src] then
+        pendingRequests[src] = nil
+        TriggerClientEvent('TC-RussianRoulette:declineNotice', challengerId, src)
+    end
 end)
 local function makeEntityFaceEntity(source, entity1, entity2)
     local p1 = GetEntityCoords(entity1, true)
@@ -34,7 +56,20 @@ RegisterNetEvent('TC-RussianRoulette:accepted', function(challengerId)
     local challengerPed = GetPlayerPed(challengerId)
     local accepterPed   = GetPlayerPed(accepter)
 
+
     if not challengerPed or not accepterPed then return end
+
+    if not pendingRequests[challengerId] then
+        lib.notify(accepter,
+            {
+                title = 'Russian Roulette',
+                description = 'Something went wrong, please ask for another invite',
+                type = 'error'
+            })
+        return
+    end
+    pendingRequests[challengerId] = nil
+
     makeEntityFaceEntity(source, challengerPed, accepterPed)
 
     FreezeEntityPosition(challengerPed, true)
