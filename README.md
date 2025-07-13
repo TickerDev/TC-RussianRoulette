@@ -18,7 +18,7 @@ A fun, dramatic, and deadly game of chance — **Russian Roulette**, now in GTA 
 
 ## 📦 Installation
 
-1. **Download the latest release** from the [Releases](https://github.com/YOUR_USERNAME/YOUR_REPO/releases) tab. Extract it to your server's `resources` folder.
+1. **Download the latest release** from the [Releases](https://github.com/TickerDev/TC-RussianRoulette/releases) tab. Extract it to your server's `resources` folder.
 2. Add the resource to your `server.cfg`:
    ```cfg
    ensure TC-RussianRoulette
