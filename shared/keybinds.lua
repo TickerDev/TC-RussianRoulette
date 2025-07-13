@@ -1,4 +1,4 @@
 Keybinds = {
-    ['Shoot'] = 166,
-    ['Forfeit'] = 167
+    ['Shoot'] = "F5",
+    ['Forfeit'] = "F6"
 }

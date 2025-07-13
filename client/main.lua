@@ -2,7 +2,6 @@ local currentProp          = nil
 local idleDict, idleAnim   = 'reaction@intimidation@1h', 'idle_a'
 local clickDict, clickAnim = 'mp_suicide', 'pistol'
 local gunHash              = `w_pi_revolver`
-
 local function loadDict(dict)
     RequestAnimDict(dict)
     while not HasAnimDictLoaded(dict) do Wait(0) end
@@ -46,7 +45,7 @@ end
 local function playBangAnim()
     loadDict(clickDict)
     local p = PlayerPedId()
-    TaskPlayAnim(p, clickDict, clickAnim, 8.0, -8.0, 1500, 50, 0, false, false, false)
+    TaskPlayAnim(p, clickDict, clickAnim, 8.0, -8.0, 1500, 8, 0, false, false, false)
     Wait(700)
     TriggerServerEvent('InteractSound_SV:PlayWithinDistance', 2, 'revolver_shoot', 1.0)
     Wait(800)
@@ -67,8 +66,6 @@ CreateThread(function()
     while true do
         if isInRR then
             DisableAllControlActions(0)
-            EnableControlAction(0, Keybinds['Shoot'], true)
-            EnableControlAction(0, Keybinds['Forfeit'], true)
         end
         Wait(0)
     end
@@ -76,7 +73,11 @@ end)
 
 local function showTurnUI(turn)
     if turn then
-        lib.showTextUI('[F5] Shoot gun\n[F6] Forfeit', { position = 'bottom-center' })
+        local key1 = GetControlInstructionalButton(2, joaat("turnShoot"), true)
+        local key2 = GetControlInstructionalButton(2, joaat("turnForfeit"), true)
+        local keyName1 = TranslateKey(key1)
+        local keyName2 = TranslateKey(key2)
+        lib.showTextUI('[' .. keyName1 .. '] Shoot gun\n[' .. keyName2 .. '] Forfeit', { position = 'bottom-center' })
         textUIShown = true
     elseif textUIShown then
         lib.hideTextUI()
@@ -120,7 +121,7 @@ RegisterNetEvent('TC-RussianRoulette:startGame', function(otherId, firstTurn)
     isInRR     = true
     opponentId = otherId
     myTurn     = (firstTurn == GetPlayerServerId(PlayerId()))
-
+    SetCurrentPedWeapon(PlayerPedId(), `WEAPON_UNARMED`, true)
     if myTurn then
         attachGunIdle()
         showTurnUI(true)
@@ -134,25 +135,6 @@ RegisterNetEvent('TC-RussianRoulette:yourTurn', function()
     myTurn = true
     attachGunIdle()
     showTurnUI(true)
-end)
-
-
-CreateThread(function()
-    while true do
-        if isInRR and myTurn then
-            if IsControlJustReleased(0, Keybinds['Shoot']) then
-                myTurn = false
-                showTurnUI(false)
-                TriggerServerEvent('TC-RussianRoulette:shoot')
-            elseif IsControlJustReleased(0, Keybinds['Forfeit']) then
-                showTurnUI(false)
-                detachGun()
-                isInRR = false
-                TriggerServerEvent('TC-RussianRoulette:forfeit')
-            end
-        end
-        Wait(0)
-    end
 end)
 
 RegisterNetEvent('TC-RussianRoulette:shotResult', function(shooter, killed)
@@ -210,3 +192,29 @@ end)
 lib.callback.register("TC-RussianRoulette:GetHeadingFromVector_2d", function(dx, dy)
     return GetHeadingFromVector_2d(dx, dy)
 end)
+lib.callback.register("TC-RussianRoulette:GetClosestPlayer", function()
+    return GetPlayerServerId(lib.getClosestPlayer(GetEntityCoords(PlayerPedId()), 3.0, false))
+end)
+local function turnShoot()
+    if isInRR and myTurn then
+        myTurn = false
+        showTurnUI(false)
+        TriggerServerEvent('TC-RussianRoulette:shoot')
+    end
+end
+RegisterCommand("turnShoot", function()
+    turnShoot()
+end, false)
+RegisterKeyMapping("turnShoot", "Perform shooting in Russian Roulette", "keyboard", Keybinds['Shoot'])
+local function turnForfeit()
+    if isInRR and myTurn then
+        showTurnUI(false)
+        detachGun()
+        isInRR = false
+        TriggerServerEvent('TC-RussianRoulette:forfeit')
+    end
+end
+RegisterCommand("turnForfeit", function()
+    turnForfeit()
+end, false)
+RegisterKeyMapping("turnForfeit", "Forfeit from Russian Roulette", "keyboard", Keybinds['Forfeit'])

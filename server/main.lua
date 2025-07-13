@@ -4,8 +4,7 @@ local pendingRequests = {}
 
 RegisterNetEvent('TC-RussianRoulette:sendRequestToClosest', function()
     local src = source
-    local myCoords = GetEntityCoords(GetPlayerPed(src))
-    local closestPlayer = lib.getClosestPlayer(myCoords, 3.0, false)
+    local closestPlayer = lib.callback.await("TC-RussianRoulette:GetClosestPlayer", src)
     if not closestPlayer then
         lib.notify(src, { title = 'Russian Roulette', description = 'No nearby player found', type = 'error' })
         return
@@ -18,9 +17,9 @@ RegisterNetEvent('TC-RussianRoulette:sendRequestToClosest', function()
 
     pendingRequests[src] = true
     SetTimeout(15000, function()
-        pendingRequests[src] = nil -- In case there is no response
+        pendingRequests[src] = nil
     end)
-
+    print(closestPlayer)
     lib.notify(src, { title = 'Russian Roulette', description = 'Invite sent', type = 'info' })
     TriggerClientEvent('TC-RussianRoulette:receiveRequest', closestPlayer, src)
 end)
